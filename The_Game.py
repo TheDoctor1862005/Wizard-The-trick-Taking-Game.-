@@ -1,17 +1,35 @@
+import json
+import os
 from itertools import product 
 from random import shuffle
 import random
 
-player_name = input("Please input your name ").lower().strip()
+#Saves the players name as a json so it can be stored. 
+def load_save():
+    if os.path.exists("wizard.json"):
+        with open("wizard.json", "r") as f:
+            return json.load(f)
+    else:
+        player_name = input("Please input your name ").lower().strip()
+        return {"Name": player_name}
 
+#Save's the data to the json back so i can edit it in the code then change json wit that info. 
+def save(data):
+    with open("wizard.json", "w") as f:
+        json.dump(data, f, indent=4)
+data = load_save()
+save(data)
+name = data["Name"]
+print(f"Welcome {name}")
 # Setup
 Suits = ["\033[32mElves\033[0m", "\033[33mGiants\033[0m", "\033[31mDwarves\033[0m", "\033[36mHumans\033[0m"] 
 Ranks = [1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 ] 
 Special = ["The Wizard", "The Jester"]
 Special_Ranks = [""]
+max_round = 10
 
 
-#Card to Text
+#Converts the cards name to something readble by humans. 
 def card_to_text(card):
     rank, suit = card
     if rank == "":
@@ -26,7 +44,7 @@ def winner_to_text(card):
     else:
         return f"{rank} with {suit} points"
 
-#Deck Creation
+#Creates the deck and shuffles it. 
 deck = list(product(Ranks, Suits)) 
 for i in range(4):
     deck = deck + list(product(Special_Ranks, Special)) 
@@ -34,7 +52,7 @@ for i in range(4):
 shuffle(deck) 
 
 
-#Draw
+#Used to draw cards. 
 remaining_cards = list(deck)
 hand = []
 def draw(number, hand):
@@ -44,12 +62,12 @@ def draw(number, hand):
         hand.append(card_drawn)
 
 
-#Figures out Suit
+#Seperates the suit from the rank and ignores the rank (for comparing which matchs suit)
 def suit_only(card):
     rank, suit = card
     return suit
 
-#converts full hand to text
+#For converting a entier hand to text in 1 go. 
 def hand_to_text(hand, player=False):
     cards_text = []
     number = str(1) 
@@ -63,7 +81,7 @@ def hand_to_text(hand, player=False):
     return ", ".join(cards_text)
 
 
-#Start round
+#The code to start up a new round.
 def start_round(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand):
     print(f"\nROUND {round}! BEGIN")
     if round == 1:
@@ -72,7 +90,7 @@ def start_round(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, c
         draw(round, person)
 
 
-#Matchs cards in hands to card played
+#Matchs cards in opponents hands to card you played so they can play a legal card
 def match(hand, suit):
     matchs = []
     for card in hand:
@@ -99,7 +117,7 @@ def match(hand, suit):
     
 
 
-#Takes the Trick
+#The actual code for the trick.
 def take_trick(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand, play_card, points):
     play_card = play_card - 1
     play_card = hand[play_card]
@@ -140,14 +158,14 @@ def take_trick(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, cl
             print(f"\n{winner} Wins!")
     else:
         if same_suiters:
-            winner = max(same_suiters, key=lambda same_suiters: same_suiters[0])[0]
+            winner = max(same_suiters, key=lambda same_suiters: same_suiters[1])[0]
         else:
             winner = "Player"
         if winner == "Player":
             print("\nYou Win!")
         else:
             print(f"\n{winner} Wins!")
-    #adds points to winner
+    #adds points to winners total points.
     for number, character in enumerate(players):
         if winner == character:
             points[number] += 1
@@ -162,7 +180,7 @@ def take_trick(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, cl
 
 
 
-#Plays the round
+#Plays out a round
 def play(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand, points):
     if round == 1:
         print("\nTo pick a card type the purple number corresponding to card you wish to play.")
@@ -204,7 +222,7 @@ round = 1
 players = ['\033[0mPlayer\033[0m', '\033[36mJimmy\033[0m', '\033[95mLily\033[0m', '\033[38;5;208mIan\033[0m', '\033[94mInfant\033[0m', '\033[90mClandriagresvangoll\033[0m']
 points = [0, 0, 0, 0, 0, 0]
 while True:
-    if round >= 11:
+    if round >= max_round:
         break
     else:
         deck = list(product(Ranks, Suits)) 
@@ -219,8 +237,7 @@ while True:
         infants_hand = []
         clandriagresvangolls_hand = []
         start_round(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand)
-        for person, held_cards in zip(players[1:], [jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand]):
-            print(f"{person} hand: {hand_to_text(held_cards)}")
+
         points = play(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand, points)
         round += 1
 
@@ -232,8 +249,10 @@ for player, score in zip(players, points):
         else:
             print(f"\n{player} got {score} {'point' if score == 1 else 'points'}")
     
+
+
 winner = max(zip(points, players))[1]
 if winner == '\033[0mPlayer\033[0m':
-    print(f"\nCongrats {player_name} you win")
+    print(f"\nCongrats {name} you win")
 else:
     print(f"\nThe grand winner is {winner}")
