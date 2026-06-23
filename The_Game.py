@@ -10,7 +10,12 @@ def load_save():
         with open("wizard.json", "r") as f:
             return json.load(f)
     else:
-        player_name = input("Please input your name ").lower().strip()
+        while True:
+            player_name = input("Please input your name ")
+            if player_name.lower().strip() in ["jimmy", "lily", "ian", "infant", "clandriagresvangoll"]:
+                print("Please use another name")
+            else:
+                break
         return {"Name": player_name}
 
 #Save's the data to the json back so i can edit it in the code then change json wit that info. 
@@ -20,13 +25,14 @@ def save(data):
 data = load_save()
 save(data)
 name = data["Name"]
-print(f"Welcome {name}")
+name = f"\033[38;5;183m{name}\033[0m"
+print(f"\nWelcome {name}")
 # Setup
 Suits = ["\033[32mElves\033[0m", "\033[33mGiants\033[0m", "\033[31mDwarves\033[0m", "\033[36mHumans\033[0m"] 
 Ranks = [1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 ] 
 Special = ["The Wizard", "The Jester"]
 Special_Ranks = [""]
-max_round = 10
+max_round = 11
 
 
 #Converts the cards name to something readble by humans. 
@@ -73,7 +79,7 @@ def hand_to_text(hand, player=False):
     number = str(1) 
     for card in hand:
         if player:
-            cards_text.append(card_to_text(card) + " " + f"\033[34m{number}\033[0m")
+            cards_text.append(f"(\033[34m{number}\033[0m)" + " " + card_to_text(card))
         else:
             cards_text.append(card_to_text(card))
         number = int(number) + 1
@@ -86,6 +92,8 @@ def start_round(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, c
     print(f"\nROUND {round}! BEGIN")
     if round == 1:
         print("\nYou have 5 opponents. Jimmy, Lily, Ian, Infant, and Clandriagresvangolls (Clan)")
+        print("\nthe game takes place over 10 rounds in each round you draw a number of cards equal to the round number. ")
+        print("\nIn each round you will take a number of 'tricks' equal to number of cards in hand. \n \nto take a trick you play a card and then each opponenet must play a card following same suit. \n \nIf you play a jester you will automatically loose the trick and if you play a wizard you instantly win. \n \nIf no wizards are played in a round then the player who played the highest value card that matchs suit with yours (including your card) gets a point. \n \nAt the end of the game player with most points win")
     for person in [hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, clandriagresvangolls_hand]:
         draw(round, person)
 
@@ -133,7 +141,7 @@ def take_trick(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, cl
     jesters = 0
     alike = 0
     diffrent = 0
-    same_suiters = []
+    same_suiters = [("Player", play_card[0])]
     for name, play in zip(players[1:], plays):
         if play[1] == "The Wizard":
             wizards += 1
@@ -158,7 +166,10 @@ def take_trick(round, hand, jimmys_hand, lilys_hand, ians_hand, infants_hand, cl
             print(f"\n{winner} Wins!")
     else:
         if same_suiters:
-            winner = max(same_suiters, key=lambda same_suiters: same_suiters[1])[0]
+            try:
+                winner = max(same_suiters, key=lambda same_suiters: same_suiters[1])[0]
+            except:
+                winner = "Player"
         else:
             winner = "Player"
         if winner == "Player":
@@ -256,3 +267,4 @@ if winner == '\033[0mPlayer\033[0m':
     print(f"\nCongrats {name} you win")
 else:
     print(f"\nThe grand winner is {winner}")
+
